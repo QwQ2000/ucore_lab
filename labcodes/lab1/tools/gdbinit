@@ -1,0 +1,4 @@
+file bin/kernel
+b kern_init
+target remote :1234
+continue
