@@ -347,6 +347,17 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     ret = -E_NO_MEM;
 
     pte_t *ptep=NULL;
+ 
+    ptep = get_pte(mm->pgdir, addr, 1); // 获取当前发生缺页的虚拟页对应的页表项
+    if (ptep == NULL) { //无法得到页表项时输出错误返回
+        cprintf("Cannot get pte when page fault occurs.\n");
+        goto failed;
+    }
+    if (*ptep == 0) { // 不存在的物理页
+        struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm); // 分配物理页，并与对应的虚拟页建立映射关系
+    } else { //对于已经分配，被调入外存中的物理页，需要通过页面替换算法进行调度
+        //练习二
+    }
     /*LAB3 EXERCISE 1: YOUR CODE
     * Maybe you want help comment, BELOW comments can help you finish the code
     *

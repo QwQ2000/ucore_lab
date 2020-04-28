@@ -134,22 +134,28 @@ default_alloc_pages(size_t n) {
             break;
         }
     }
-    if (page != NULL) {
-        list_del(&(page->page_link));
+    
+    if (page != NULL) { 
+        //页面在内存上是连续的
+        for (struct Page *p=page;p!=page+n;++p) 
+            ClearPageProperty(p); //标记页面为非空闲
+        //多余的内存组成新的空闲块，插入到链表中
         if (page->property > n) {
-            struct Page *p = page + n;
-            p->property = page->property - n;
-            list_add(&free_list, &(p->page_link));
-    }
+            struct Page *p=page+n;
+            p->property=page->property-n;
+            //在原先的链表节点后插入新的空闲块节点
+            list_add(&(page->page_link),&(p->page_link));
+        }
+        //原来的空闲块已经不再空闲了，从链表中删除
+        list_del(&(page->page_link));
         nr_free -= n;
-        ClearPageProperty(page);
     }
     return page;
 }
 
 static void
 default_free_pages(struct Page *base, size_t n) {
-    assert(n > 0);
+ assert(n > 0);
     struct Page *p = base;
     for (; p != base + n; p ++) {
         assert(!PageReserved(p) && !PageProperty(p));
@@ -175,8 +181,12 @@ default_free_pages(struct Page *base, size_t n) {
         }
     }
     nr_free += n;
-    list_add(&free_list, &(base->page_link));
-}
+    for (le=list_next(&free_list);le!=&free_list;le=list_next(le))
+        if (base + base->property <= p) //base后的第一个内存块
+            break;
+    //插入到base后第一个内存块之前
+    list_add_before(le, &(base->page_link));
+} 
 
 static size_t
 default_nr_free_pages(void) {

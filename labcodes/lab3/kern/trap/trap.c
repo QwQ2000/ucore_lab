@@ -36,6 +36,10 @@ static struct pseudodesc idt_pd = {
 /* idt_init - initialize IDT to each of the entry points in kern/trap/vectors.S */
 void
 idt_init(void) {
+    extern uintptr_t __vectors[];
+    for (int i=0;i<256;++i)
+        SETGATE(idt[i],0,GD_KTEXT,__vectors[i],0);
+    lidt(&idt_pd);
      /* LAB1 YOUR CODE : STEP 2 */
      /* (1) Where are the entry addrs of each Interrupt Service Routine (ISR)?
       *     All ISR's entry addrs are stored in __vectors. where is uintptr_t __vectors[] ?
@@ -165,7 +169,7 @@ extern struct mm_struct *check_mm_struct;
 static void
 trap_dispatch(struct trapframe *tf) {
     char c;
-
+    static int clock_cnt=0;
     int ret;
 
     switch (tf->tf_trapno) {
@@ -186,6 +190,9 @@ trap_dispatch(struct trapframe *tf) {
          * (2) Every TICK_NUM cycle, you can print some info using a funciton, such as print_ticks().
          * (3) Too Simple? Yes, I think so!
          */
+         ++clock_cnt;
+        if (clock_cnt==TICK_NUM)
+            print_ticks(),clock_cnt=0;
         break;
     case IRQ_OFFSET + IRQ_COM1:
         c = cons_getc();
