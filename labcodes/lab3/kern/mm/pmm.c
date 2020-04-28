@@ -360,27 +360,7 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
      *   PTE_W           0x002                   // page table/directory entry flags bit : Writeable
      *   PTE_U           0x004                   // page table/directory entry flags bit : User can access
      */
-
-    pde_t *pdep = pgdir + PDX(la); //PDX意为取前十位的页表目录索引
-    pte_t *ptep = ((pte_t *) (KADDR(*pdep & ~0XFFF)) + PTX(la)); 
-    //得到二级页表的首地址后用PTX计算二级页表中的索引
-    if (*pdep & PTE_P) 
-        return ptep; 
-    //返回存在的页表项，对于不存在的页表项根据create参数决定是否创建
-    if (!create) 
-        return NULL;
-    struct Page* pt = alloc_page();
-    if (pt == NULL) 
-        return NULL;
-    set_page_ref(pt, 1);
-    //分配一个新的内存页来存储新的页表项
-    ptep = KADDR(page2pa(pt)); //页面->物理地址->虚拟地址
-    memset(ptep, 0, PGSIZE); 
-    *pdep = (page2pa(pt) & ~0XFFF) | PTE_U | PTE_W | PTE_P;
-    return ptep + PTX(la);
-
 #if 0
-    
     pde_t *pdep = NULL;   // (1) find page directory entry
     if (0) {              // (2) check if entry is not present
                           // (3) check if creating is needed, then alloc page for page table
@@ -392,6 +372,18 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     }
     return NULL;          // (8) return page table entry
 #endif
+    pde_t *pdep = &pgdir[PDX(la)];
+    if (!(*pdep & PTE_P)) {
+        struct Page *page;
+        if (!create || (page = alloc_page()) == NULL) {
+            return NULL;
+        }
+        set_page_ref(page, 1);
+        uintptr_t pa = page2pa(page);
+        memset(KADDR(pa), 0, PGSIZE);
+        *pdep = pa | PTE_U | PTE_W | PTE_P;
+    }
+    return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
 }
 
 //get_page - get related Page struct for linear address la using PDT pgdir
@@ -428,19 +420,8 @@ page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
      * DEFINEs:
      *   PTE_P           0x001                   // page table/directory entry flags bit : Present
      */
-
-    if (*ptep & PTE_P) {
-        struct Page *page = pte2page(*ptep);
-        //引用计数变为0则释放空间
-        if (!--(page->ref)) 
-            free_page(page);
-        //无效化二级页表项 
-        *ptep &= (~PTE_P);
-        tlb_invalidate(pgdir, la);//刷新tlb
-    }
-
 #if 0
-    if (0) {                      //(1) check if this page table entry is present
+    if (0) {                      //(1) check if page directory is present
         struct Page *page = NULL; //(2) find corresponding page to pte
                                   //(3) decrease page reference
                                   //(4) and free this page when page reference reachs 0
@@ -448,6 +429,14 @@ page_remove_pte(pde_t *pgdir, uintptr_t la, pte_t *ptep) {
                                   //(6) flush tlb
     }
 #endif
+    if (*ptep & PTE_P) {
+        struct Page *page = pte2page(*ptep);
+        if (page_ref_dec(page) == 0) {
+            free_page(page);
+        }
+        *ptep = 0;
+        tlb_invalidate(pgdir, la);
+    }
 }
 
 //page_remove - free an Page which is related linear address la and has an validated pte

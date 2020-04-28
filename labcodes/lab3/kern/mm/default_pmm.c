@@ -116,7 +116,7 @@ default_init_memmap(struct Page *base, size_t n) {
     base->property = n;
     SetPageProperty(base);
     nr_free += n;
-    list_add(&free_list, &(base->page_link));
+    list_add_before(&free_list, &(base->page_link));
 }
 
 static struct Page *
@@ -127,6 +127,7 @@ default_alloc_pages(size_t n) {
     }
     struct Page *page = NULL;
     list_entry_t *le = &free_list;
+    // TODO: optimize (next-fit)
     while ((le = list_next(le)) != &free_list) {
         struct Page *p = le2page(le, page_link);
         if (p->property >= n) {
@@ -134,28 +135,23 @@ default_alloc_pages(size_t n) {
             break;
         }
     }
-    
-    if (page != NULL) { 
-        //页面在内存上是连续的
-        for (struct Page *p=page;p!=page+n;++p) 
-            ClearPageProperty(p); //标记页面为非空闲
-        //多余的内存组成新的空闲块，插入到链表中
+    if (page != NULL) {
         if (page->property > n) {
-            struct Page *p=page+n;
-            p->property=page->property-n;
-            //在原先的链表节点后插入新的空闲块节点
-            list_add(&(page->page_link),&(p->page_link));
+            struct Page *p = page + n;
+            p->property = page->property - n;
+            SetPageProperty(p);
+            list_add_after(&(page->page_link), &(p->page_link));
         }
-        //原来的空闲块已经不再空闲了，从链表中删除
         list_del(&(page->page_link));
         nr_free -= n;
+        ClearPageProperty(page);
     }
     return page;
 }
 
 static void
 default_free_pages(struct Page *base, size_t n) {
- assert(n > 0);
+    assert(n > 0);
     struct Page *p = base;
     for (; p != base + n; p ++) {
         assert(!PageReserved(p) && !PageProperty(p));
@@ -168,6 +164,7 @@ default_free_pages(struct Page *base, size_t n) {
     while (le != &free_list) {
         p = le2page(le, page_link);
         le = list_next(le);
+        // TODO: optimize
         if (base + base->property == p) {
             base->property += p->property;
             ClearPageProperty(p);
@@ -181,12 +178,17 @@ default_free_pages(struct Page *base, size_t n) {
         }
     }
     nr_free += n;
-    for (le=list_next(&free_list);le!=&free_list;le=list_next(le))
-        if (base + base->property <= p) //base后的第一个内存块
+    le = list_next(&free_list);
+    while (le != &free_list) {
+        p = le2page(le, page_link);
+        if (base + base->property <= p) {
+            assert(base + base->property != p);
             break;
-    //插入到base后第一个内存块之前
+        }
+        le = list_next(le);
+    }
     list_add_before(le, &(base->page_link));
-} 
+}
 
 static size_t
 default_nr_free_pages(void) {
@@ -318,4 +320,3 @@ const struct pmm_manager default_pmm_manager = {
     .nr_free_pages = default_nr_free_pages,
     .check = default_check,
 };
-
