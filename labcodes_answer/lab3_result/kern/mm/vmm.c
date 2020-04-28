@@ -364,68 +364,26 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     *   mm->pgdir : the PDT of these vma
     *
     */
-#if 0
-    /*LAB3 EXERCISE 1: YOUR CODE*/
-    ptep = ???              //(1) try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
-    if (*ptep == 0) {
-                            //(2) if the phy addr isn't exist, then alloc a page & map the phy addr with logical addr
 
-    }
-    else {
-    /*LAB3 EXERCISE 2: YOUR CODE
-    * Now we think this pte is a  swap entry, we should load data from disk to a page with phy addr,
-    * and map the phy addr with logical addr, trigger swap manager to record the access situation of this page.
-    *
-    *  Some Useful MACROs and DEFINEs, you can use them in below implementation.
-    *  MACROs or Functions:
-    *    swap_in(mm, addr, &page) : alloc a memory page, then according to the swap entry in PTE for addr,
-    *                               find the addr of disk page, read the content of disk page into this memroy page
-    *    page_insert ： build the map of phy addr of an Page with the linear addr la
-    *    swap_map_swappable ： set the page swappable
-    */
-        if(swap_init_ok) {
-            struct Page *page=NULL;
-                                    //(1）According to the mm AND addr, try to load the content of right disk page
-                                    //    into the memory which page managed.
-                                    //(2) According to the mm, addr AND page, setup the map of phy addr <---> logical addr
-                                    //(3) make the page swappable.
-        }
-        else {
-            cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
-            goto failed;
-        }
-   }
-#endif
-    // try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
-    // (notice the 3th parameter '1')
-    if ((ptep = get_pte(mm->pgdir, addr, 1)) == NULL) {
-        cprintf("get_pte in do_pgfault failed\n");
+    ptep = get_pte(mm->pgdir, addr, 1); // 获取当前发生缺页的虚拟页对应的页表项
+    if (ptep == NULL) { //无法得到页表项时输出错误返回
+        cprintf("Cannot get pte when page fault occurs.\n");
         goto failed;
     }
-    
-    if (*ptep == 0) { // if the phy addr isn't exist, then alloc a page & map the phy addr with logical addr
-        if (pgdir_alloc_page(mm->pgdir, addr, perm) == NULL) {
-            cprintf("pgdir_alloc_page in do_pgfault failed\n");
-            goto failed;
-        }
-    }
-    else { // if this pte is a swap entry, then load data from disk to a page with phy addr
-           // and call page_insert to map the phy addr with logical addr
-        if(swap_init_ok) {
-            struct Page *page=NULL;
-            if ((ret = swap_in(mm, addr, &page)) != 0) {
-                cprintf("swap_in in do_pgfault failed\n");
-                goto failed;
-            }    
-            page_insert(mm->pgdir, page, addr, perm);
-            swap_map_swappable(mm, addr, page, 1);
-            page->pra_vaddr = addr;
-        }
-        else {
+    if (*ptep == 0) { // 不存在的物理页
+        struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm); // 分配物理页，并与对应的虚拟页建立映射关系
+    } else { //对于已经分配，被调入外存中的物理页，需要通过页面替换算法进行调度
+        if (swap_init_ok) { // 判断是否当前交换机制正确被初始化
+            struct Page *page = NULL;
+            swap_in(mm, addr, &page); // 将物理页换入到内存中
+            page_insert(mm->pgdir, page, addr, perm); // 将物理页与虚拟页建立映射关系
+            swap_map_swappable(mm, addr, page, 1); // 设置当前的物理页为可交换的
+            page->pra_vaddr = addr; // 同时在物理页中维护其对应到的虚拟页的信息，这个语句本人觉得最好应当放置在page_insert函数中进行维护，在该建立映射关系的函数外对物理page对应的虚拟地址进行维护显得有些不太合适
+        } else {
             cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
             goto failed;
-        }
-   }
+    }
+
    ret = 0;
 failed:
     return ret;
