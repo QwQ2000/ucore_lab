@@ -373,14 +373,14 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     if (*ptep == 0) { // 不存在的物理页
         struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm); // 分配物理页，并与对应的虚拟页建立映射关系
     } else { //对于已经分配，被调入外存中的物理页，需要通过页面替换算法进行调度
-        if (swap_init_ok) { // 判断是否当前交换机制正确被初始化
+        if (swap_init_ok) { //交换机制初始化正常
             struct Page *page = NULL;
-            swap_in(mm, addr, &page); // 将物理页换入到内存中
+            swap_in(mm, addr, &page); // 将物理页从外存换入到内存中
             page_insert(mm->pgdir, page, addr, perm); // 将物理页与虚拟页建立映射关系
-            swap_map_swappable(mm, addr, page, 1); // 设置当前的物理页为可交换的
-            page->pra_vaddr = addr; // 同时在物理页中维护其对应到的虚拟页的信息，这个语句本人觉得最好应当放置在page_insert函数中进行维护，在该建立映射关系的函数外对物理page对应的虚拟地址进行维护显得有些不太合适
+            page->pra_vaddr = addr; // 同时在物理页中维护其对应到的虚拟页的信息
+            swap_map_swappable(mm, addr, page, 1); // 设置当前的物理页为可交换的，以便于将来再次将其调入外存
         } else {
-            cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
+            cprintf("Swap initialization failed\n",*ptep);
             goto failed;
         }
     }
