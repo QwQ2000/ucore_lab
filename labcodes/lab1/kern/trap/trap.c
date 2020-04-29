@@ -35,7 +35,8 @@ static struct pseudodesc idt_pd = {
 void
 idt_init(void) {
     extern uintptr_t __vectors[];
-    for (int i=0;i<256;++i)
+    int i=0;
+    for (;i<256;++i)
         SETGATE(idt[i],0,GD_KTEXT,__vectors[i],0);
     lidt(&idt_pd);
      /* LAB1 YOUR CODE : STEP 2 */

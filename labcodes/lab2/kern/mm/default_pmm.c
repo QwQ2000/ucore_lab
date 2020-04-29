@@ -137,7 +137,8 @@ default_alloc_pages(size_t n) {
     
     if (page != NULL) { 
         //页面在内存上是连续的
-        for (struct Page *p=page;p!=page+n;++p) 
+        struct Page *p=page;
+        for (;p!=page+n;++p) 
             ClearPageProperty(p); //标记页面为非空闲
         //多余的内存组成新的空闲块，插入到链表中
         if (page->property > n) {
