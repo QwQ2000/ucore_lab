@@ -2,23 +2,23 @@
 
 Special kernel symbols:
   entry  0xc0100036 (phys)
-  etext  0xc0105f4d (phys)
+  etext  0xc0105f4a (phys)
   edata  0xc011a000 (phys)
   end    0xc011af48 (phys)
 Kernel executable memory footprint: 108KB
 ebp:0xc0116f38 eip:0xc0100a99 args:0x00010094 0x00010094 0xc0116f68 0xc01000c8 
     kern/debug/kdebug.c:296: print_stackframe+21
-ebp:0xc0116f48 eip:0xc0100d83 args:0x00000000 0x00000000 0x00000000 0xc0116fb8 
+ebp:0xc0116f48 eip:0xc0100d80 args:
     kern/debug/kmonitor.c:129: mon_backtrace+10
-ebp:0xc0116f68 eip:0xc01000c8 args:0x00000000 0xc0116f90 0xffff0000 0xc0116f94 
+ebp:0xc0116f68 eip:0xc01000c8 args:
     kern/init/init.c:49: grade_backtrace2+33
-ebp:0xc0116f88 eip:0xc01000f2 args:0x00000000 0xffff0000 0xc0116fb4 0x0000002a 
+ebp:0xc0116f88 eip:0xc01000f2 args:
     kern/init/init.c:54: grade_backtrace1+38
-ebp:0xc0116fa8 eip:0xc0100111 args:0x00000000 0xc0100036 0xffff0000 0x0000001d 
+ebp:0xc0116fa8 eip:0xc0100111 args:
     kern/init/init.c:59: grade_backtrace0+23
-ebp:0xc0116fc8 eip:0xc0100137 args:0xc0105f7c 0xc0105f60 0x00000f48 0x00000000 
+ebp:0xc0116fc8 eip:0xc0100137 args:
     kern/init/init.c:64: grade_backtrace+34
-ebp:0xc0116ff8 eip:0xc010008b args:0xc010615c 0xc0106164 0xc0100d0b 0xc0106183 
+ebp:0xc0116ff8 eip:0xc010008b args:
     kern/init/init.c:29: kern_init+84
 memory management: default_pmm_manager
 e820map:
@@ -46,15 +46,15 @@ kernel panic at kern/trap/trap.c:18:
 stack trackback:
 ebp:0xc0116ee0 eip:0xc0100a99 args:0xc0106028 0xc0116f24 0x00000012 0xc0116f5c 
     kern/debug/kdebug.c:296: print_stackframe+21
-ebp:0xc0116f10 eip:0xc0100451 args:0xc01062ee 0x00000012 0xc01062d8 0x00000003 
+ebp:0xc0116f10 eip:0xc0100451 args:
     kern/debug/panic.c:27: __panic+103
-ebp:0xc0116f30 eip:0xc01018d6 args:0xc0116f68 0xc010028d 0xc010023e 0xc0116f5c 
+ebp:0xc0116f30 eip:0xc01018d3 args:
     kern/trap/trap.c:0: print_ticks+65
-ebp:0xc0116f60 eip:0xc0101cd4 args:0xc0116f8c 0xc01002b0 0xc0106272 0xc0116fa4 
-    kern/trap/trap.c:156: trap_dispatch+89
-ebp:0xc0116f80 eip:0xc0101d98 args:0xc0116f8c 0x0000807c 0x00010094 0xc0116ff8 
-    kern/trap/trap.c:192: trap+16
-ebp:0xc0116ff8 eip:0xc0102823 args:0xc010615c 0xc0106164 0xc0100d0b 0xc0106183 
+ebp:0xc0116f60 eip:0xc0101cd1 args:
+    kern/trap/trap.c:157: trap_dispatch+89
+ebp:0xc0116f80 eip:0xc0101d95 args:
+    kern/trap/trap.c:193: trap+16
+ebp:0xc0116ff8 eip:0xc0102820 args:
     kern/trap/trapentry.S:24: <unknown>+0
 Welcome to the kernel debug monitor!!
 Type 'help' for a list of commands.

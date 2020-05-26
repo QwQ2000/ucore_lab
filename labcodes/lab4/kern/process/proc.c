@@ -102,6 +102,18 @@ alloc_proc(void) {
      *       uint32_t flags;                             // Process flag
      *       char name[PROC_NAME_LEN + 1];               // Process name
      */
+        proc->state = PROC_UNINIT; //进程的初始状态是未初始化,在proc.h中定义了进程状态的枚举
+        proc->cr3 = boot_cr3;  //页表的基地址，和内核相同，声明在pmm.h中
+        proc->pid = -1; //pid=-1表示未分配pid，在任务2中对pid进行分配，合法的pid从0开始
+        proc->runs = 0; //其他成员变量简单初始化
+        proc->kstack = 0;
+        proc->need_resched = 0;
+        proc->parent = NULL;
+        proc->mm = NULL;
+        memset(&proc->context, 0, sizeof(struct context));
+        proc->tf = NULL;
+        proc->flags = 0;
+        memset(proc->name, 0, PROC_NAME_LEN);
     }
     return proc;
 }
@@ -296,6 +308,20 @@ do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf) {
     //    5. insert proc_struct into hash_list && proc_list
     //    6. call wakeup_proc to make the new child process RUNNABLE
     //    7. set ret vaule using child proc's pid
+
+    if ((proc = alloc_proc()) == NULL)
+        goto fork_out; //分配PCB，分配失败直接退出
+    if (setup_kstack(proc) != 0)
+        goto bad_fork_cleanup_kstack; //初始化内核栈,失败退出
+    copy_mm(clone_flags, proc); //分配虚存空间，由于内核线程不需要虚存管理，事实上这个函数没有作用
+    copy_thread(proc,stack,tf); //初始化中断帧
+    proc->pid = get_pid(); //分配pid
+    hash_proc(proc); //放入哈希表中，便于进程查找
+    list_add(&proc_list, &proc->list_link); //将线程加入线程链表中，便于进行调度
+    wakeup_proc(proc); //该线程的状态设置为可以运行
+    ++ nr_process;//全局线程数增加
+    ret = proc->pid; // 返回新线程的pid
+
 fork_out:
     return ret;
 

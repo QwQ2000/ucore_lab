@@ -1,0 +1,111 @@
+(THU.CST) os is loading ...
+
+Special kernel symbols:
+  entry  0xc0100036 (phys)
+  etext  0xc01082ae (phys)
+  edata  0xc0123000 (phys)
+  end    0xc0124110 (phys)
+Kernel executable memory footprint: 145KB
+ebp:0xc011ff48 eip:0xc0100a81 args:0x00010094 0x00010094 0xc011ff78 0xc01000c4 
+    kern/debug/kdebug.c:308: print_stackframe+21
+ebp:0xc011ff58 eip:0xc0100d7d args:0x00000000 0x00000000 0x00000000 0xc011ffc8 
+    kern/debug/kmonitor.c:129: mon_backtrace+10
+ebp:0xc011ff78 eip:0xc01000c4 args:0x00000000 0xc011ffa0 0xffff0000 0xc011ffa4 
+    kern/init/init.c:56: grade_backtrace2+19
+ebp:0xc011ff98 eip:0xc01000e6 args:0x00000000 0xffff0000 0xc011ffc4 0x0000002a 
+    kern/init/init.c:61: grade_backtrace1+27
+ebp:0xc011ffb8 eip:0xc0100103 args:0x00000000 0xc0100036 0xffff0000 0xc0100079 
+    kern/init/init.c:66: grade_backtrace0+19
+ebp:0xc011ffd8 eip:0xc0100124 args:0x00000000 0x00000000 0x00000000 0xc01082c0 
+    kern/init/init.c:71: grade_backtrace+26
+ebp:0xc011fff8 eip:0xc0100086 args:0xc01084bc 0xc01084c4 0xc0100d06 0xc01084e3 
+    kern/init/init.c:31: kern_init+79
+memory management: default_pmm_manager
+e820map:
+  memory: 0009fc00, [00000000, 0009fbff], type = 1.
+  memory: 00000400, [0009fc00, 0009ffff], type = 2.
+  memory: 00010000, [000f0000, 000fffff], type = 2.
+  memory: 07ee0000, [00100000, 07fdffff], type = 1.
+  memory: 00020000, [07fe0000, 07ffffff], type = 2.
+  memory: 00040000, [fffc0000, ffffffff], type = 2.
+check_alloc_page() succeeded!
+check_pgdir() succeeded!
+check_boot_pgdir() succeeded!
+-------------------- BEGIN --------------------
+PDE(0e0) c0000000-f8000000 38000000 urw
+  |-- PTE(38000) c0000000-f8000000 38000000 -rw
+PDE(001) fac00000-fb000000 00400000 -rw
+  |-- PTE(000e0) faf00000-fafe0000 000e0000 urw
+  |-- PTE(00001) fafeb000-fafec000 00001000 -rw
+--------------------- END ---------------------
+check_vma_struct() succeeded!
+page fault at 0x00000100: K/W [no page found].
+check_pgfault() succeeded!
+check_vmm() succeeded.
+ide 0:      10000(sectors), 'QEMU HARDDISK'.
+ide 1:     262144(sectors), 'QEMU HARDDISK'.
+SWAP: manager = fifo swap manager
+BEGIN check_swap: count 1, total 31964
+setup Page Table for vaddr 0X1000, so alloc a page
+setup Page Table vaddr 0~4MB OVER!
+set up init env for check_swap begin!
+page fault at 0x00001000: K/W [no page found].
+page fault at 0x00002000: K/W [no page found].
+page fault at 0x00003000: K/W [no page found].
+page fault at 0x00004000: K/W [no page found].
+set up init env for check_swap over!
+write Virt Page c in fifo_check_swap
+write Virt Page a in fifo_check_swap
+write Virt Page d in fifo_check_swap
+write Virt Page b in fifo_check_swap
+write Virt Page e in fifo_check_swap
+page fault at 0x00005000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x1000 to disk swap entry 2
+write Virt Page b in fifo_check_swap
+write Virt Page a in fifo_check_swap
+page fault at 0x00001000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x2000 to disk swap entry 3
+swap_in: load disk swap entry 2 with swap_page in vadr 0x1000
+write Virt Page b in fifo_check_swap
+page fault at 0x00002000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x3000 to disk swap entry 4
+swap_in: load disk swap entry 3 with swap_page in vadr 0x2000
+write Virt Page c in fifo_check_swap
+page fault at 0x00003000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x4000 to disk swap entry 5
+swap_in: load disk swap entry 4 with swap_page in vadr 0x3000
+write Virt Page d in fifo_check_swap
+page fault at 0x00004000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x5000 to disk swap entry 6
+swap_in: load disk swap entry 5 with swap_page in vadr 0x4000
+write Virt Page e in fifo_check_swap
+page fault at 0x00005000: K/W [no page found].
+swap_out: i 0, store page in vaddr 0x1000 to disk swap entry 2
+swap_in: load disk swap entry 6 with swap_page in vadr 0x5000
+write Virt Page a in fifo_check_swap
+page fault at 0x00001000: K/R [no page found].
+swap_out: i 0, store page in vaddr 0x2000 to disk swap entry 3
+swap_in: load disk swap entry 2 with swap_page in vadr 0x1000
+count is 0, total is 7
+check_swap() succeeded!
+++ setup timer interrupts
+100 ticks
+End of Test.
+kernel panic at kern/trap/trap.c:20:
+    EOT: kernel seems ok.
+stack trackback:
+ebp:0xc011ff10 eip:0xc0100a81 args:0xc0304000 0xc0304000 0xc011ff3c 0xc011ff44 
+    kern/debug/kdebug.c:308: print_stackframe+21
+ebp:0xc011ff30 eip:0xc0100454 args:0xc010874e 0x00000014 0xc0108738 0x00010094 
+    kern/debug/panic.c:27: __panic+107
+ebp:0xc011ff50 eip:0xc0102087 args:0xc01086e1 0xc011ffb4 0xc0124104 0x00000000 
+    kern/trap/trap.c:0: print_ticks+59
+ebp:0xc011ff70 eip:0xc01025f5 args:0xc011ff9c 0xc010029d 0xc01086c6 0xc011ffb4 
+    kern/trap/trap.c:197: trap_dispatch+201
+ebp:0xc011ff90 eip:0xc01026aa args:0xc011ff9c 0x0000807c 0x00010094 0xc011fff8 
+    kern/trap/trap.c:234: trap+16
+ebp:0xc011fff8 eip:0xc0103136 args:0xc01084bc 0xc01084c4 0xc0100d06 0xc01084e3 
+    kern/trap/trapentry.S:24: <unknown>+0
+Welcome to the kernel debug monitor!!
+Type 'help' for a list of commands.
+K> 

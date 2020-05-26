@@ -393,6 +393,26 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
         }
    }
 #endif
+ptep = get_pte(mm->pgdir, addr, 1); // 获取当前发生缺页的虚拟页对应的页表项
+    if (ptep == NULL) { //无法得到页表项时输出错误返回
+        cprintf("Cannot get pte when page fault occurs.\n");
+        goto failed;
+    }
+    if (*ptep == 0) { // 不存在的物理页
+        struct Page* page = pgdir_alloc_page(mm->pgdir, addr, perm); // 分配物理页，并与对应的虚拟页建立映射关系
+    } else { //对于已经分配，被调入外存中的物理页，需要通过页面替换算法进行调度
+        if (swap_init_ok) { //交换机制初始化正常
+            struct Page *page = NULL;
+            swap_in(mm, addr, &page); // 将物理页从外存换入到内存中
+            page_insert(mm->pgdir, page, addr, perm); // 将物理页与虚拟页建立映射关系
+            page->pra_vaddr = addr; // 同时在物理页中维护其对应到的虚拟页的信息
+            swap_map_swappable(mm, addr, page, 1); // 设置当前的物理页为可交换的，以便于将来再次将其调入外存
+        } else {
+            cprintf("Swap initialization failed\n",*ptep);
+            goto failed;
+        }
+    }
+
    ret = 0;
 failed:
     return ret;
