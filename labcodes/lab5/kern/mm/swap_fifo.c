@@ -51,6 +51,7 @@ _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int
     //record the page access situlation
     /*LAB3 EXERCISE 2: YOUR CODE*/ 
     //(1)link the most recent arrival page at the back of the pra_list_head qeueue.
+    list_add_before(head, entry);
     return 0;
 }
 /*
@@ -60,14 +61,15 @@ _fifo_map_swappable(struct mm_struct *mm, uintptr_t addr, struct Page *page, int
 static int
 _fifo_swap_out_victim(struct mm_struct *mm, struct Page ** ptr_page, int in_tick)
 {
-     list_entry_t *head=(list_entry_t*) mm->sm_priv;
-         assert(head != NULL);
-     assert(in_tick==0);
-     /* Select the victim */
-     /*LAB3 EXERCISE 2: YOUR CODE*/ 
-     //(1)  unlink the  earliest arrival page in front of pra_list_head qeueue
-     //(2)  assign the value of *ptr_page to the addr of this page
-     return 0;
+    list_entry_t *head=(list_entry_t*) mm->sm_priv; // 找到链表的入口
+    assert(head != NULL); // 进行一系列检查
+    assert(in_tick==0);
+    list_entry_t *le = list_next(head); // 取出链表头，即最早进入的物理页面
+    assert(le != head); // 确保链表非空
+    struct Page *page = le2page(le, pra_page_link); // 找到对应的物理页面的Page结构
+    list_del(le); // 从链表上删除取出的即将被换出的物理页面
+    *ptr_page = page;
+    return 0;
 }
 
 static int

@@ -109,6 +109,22 @@ alloc_proc(void) {
      *       uint32_t wait_state;                        // waiting state
      *       struct proc_struct *cptr, *yptr, *optr;     // relations between processes
 	 */
+        proc->state = PROC_UNINIT; //进程的初始状态是未初始化,在proc.h中定义了进程状态的枚举
+        proc->cr3 = boot_cr3;  //页表的基地址，和内核相同，声明在pmm.h中
+        proc->pid = -1; //pid=-1表示未分配pid，在任务2中对pid进行分配，合法的pid从0开始
+        proc->runs = 0; //其他成员变量简单初始化
+        proc->kstack = 0;
+        proc->need_resched = 0;
+        proc->parent = NULL;
+        proc->mm = NULL;
+        memset(&proc->context, 0, sizeof(struct context));
+        proc->tf = NULL;
+        proc->flags = 0;
+        memset(proc->name, 0, PROC_NAME_LEN);
+
+
+        proc->wait_state = 0;//初始化进程等待状态  
+        proc->cptr = proc->optr = proc->yptr = NULL;//进程相关指针初始化
     }
     return proc;
 }
@@ -395,7 +411,24 @@ do_fork(uint32_t clone_flags, uintptr_t stack, struct trapframe *tf) {
     //    5. insert proc_struct into hash_list && proc_list
     //    6. call wakeup_proc to make the new child process RUNNABLE
     //    7. set ret vaule using child proc's pid
+    if ((proc = alloc_proc()) == NULL)
+        goto fork_out; //分配PCB，分配失败直接退出
+    proc->parent = current;// lab5要求
+    if (setup_kstack(proc) != 0)
+        goto bad_fork_cleanup_kstack; //初始化内核栈,失败退出
+    copy_mm(clone_flags, proc); //分配虚存空间，由于内核线程不需要虚存管理，事实上这个函数没有作用
+    copy_thread(proc,stack,tf); //初始化中断帧
+    bool intr_flag;
+    local_intr_save(intr_flag);
+    {
+        proc->pid = get_pid();//分配pid
+        hash_proc(proc);//放入哈希表中，便于进程查找
+        set_links(proc);//将原来简单的计数改成来执行set_links函数，从而实现设置进程的相关链接 
 
+    }
+    local_intr_restore(intr_flag);
+    wakeup_proc(proc); //该线程的状态设置为可以运行
+    ret = proc->pid; // 返回新线程的pid
 	//LAB5 YOUR CODE : (update LAB4 steps)
    /* Some Functions
     *    set_links:  set the relation links of process.  ALSO SEE: remove_links:  lean the relation links of process 
@@ -602,6 +635,12 @@ load_icode(unsigned char *binary, size_t size) {
      *          tf_eip should be the entry point of this binary program (elf->e_entry)
      *          tf_eflags should be set to enable computer to produce Interrupt
      */
+    tf->tf_cs = USER_CS;
+    tf->tf_ds = tf->tf_es = tf->tf_ss = USER_DS;
+    tf->tf_esp = USTACKTOP;
+    tf->tf_eip = elf->e_entry;
+    tf->tf_eflags = FL_IF; // to enable interrupt
+
     ret = 0;
 out:
     return ret;
