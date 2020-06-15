@@ -519,7 +519,7 @@ copy_range(pde_t *to, pde_t *from, uintptr_t start, uintptr_t end, bool share) {
          * (1) find src_kvaddr: the kernel virtual address of page
          * (2) find dst_kvaddr: the kernel virtual address of npage
          * (3) memory copy from src_kvaddr to dst_kvaddr, size is PGSIZE
-         * (4) build the map of phy addr of  nage with the linear addr start
+         * (4) build the map of phy addr of  npage with the linear addr start
          */
         char *src_kvaddr = page2kva(page); // 找到父进程需要复制的物理页在内核地址空间中的虚拟地址，这是由于这个函数执行的时候使用的时内核的地址空间
         char *dst_kvaddr = page2kva(npage); // 找到子进程需要被填充的物理页的内核虚拟地址
